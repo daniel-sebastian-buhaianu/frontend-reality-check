@@ -1,236 +1,255 @@
 <?php  
 
+include './helper_functions.php';
+
 session_start();
 
-if ( isset( $_POST['reset'] ) ) {
+if ( 'POST' === $_SERVER['REQUEST_METHOD'] ) {
+     
+    if ( isset( $_POST['submit'] ) ) {
 
-	unset( $_SESSION['birth_date'] );
-	unset( $_SESSION['age'] );
+    	if ( isset( $_SESSION['alert'] ) ) {
+    		unset( $_SESSION['alert'] );
+    	}
 
-	header('Location: index.php');
+    	if ( isset( $_SESSION['errors'] ) ) {
+    		unset( $_SESSION['errors'] );
+    	}
+
+    	if ( isset( $_SESSION['result'] ) ) {
+    		unset( $_SESSION['result'] );
+    	}
+
+    	if ( isset( $_SESSION['date_of_birth'] ) ) {
+    		unset( $_SESSION['date_of_birth'] );
+    	}
+
+    	if ( isset( $_SESSION['life_expectancy'] ) ) {
+    		unset( $_SESSION['life_expectancy'] );
+    	}
+
+    	if ( empty( $_POST['date_of_birth'] )
+    		|| empty( $_POST['life_expectancy'] ) ) {
+
+    		if ( empty( $_POST['date_of_birth'] ) ) {
+    			$_SESSION['errors']['date_of_birth'] = create_error( '* required' );
+    		}
+
+    		if ( empty( $_POST['life_expectancy'] ) ) {
+    			$_SESSION['errors']['life_expectancy'] = create_error( '* required' );
+    		}
+
+    		$_SESSION['alert'] = create_alert( 'Please fill in all the required fields.' );
+
+    		header( 'Location: index.php' );
+    		return;
+    	}
+
+    	if ( is_date_of_birth_valid( $_POST['date_of_birth'] ) 
+    		&& is_life_expectancy_valid( $_POST['life_expectancy'] ) ) {
+
+			$_SESSION['date_of_birth']   = $_POST['date_of_birth'];
+			$_SESSION['life_expectancy'] = $_POST['life_expectancy'];
+
+			$_SESSION['result'] = get_result( $_SESSION['date_of_birth'], $_SESSION['life_expectancy'] ); 
+
+			header('Location: index.php');
+			return;
+
+    	} else {
+
+    		if ( ! is_date_of_birth_valid( $_POST['date_of_birth'] ) ) {
+    			$_SESSION['errors']['date_of_birth'] = create_error( 'Invalid!' );
+    			$_SESSION['alert'] = create_alert( 'Please enter a valid date of birth using the format: MM/DD/YYYY.' );
+
+    			header( 'Location: index.php' );
+    			return;
+    		}
+
+    		if ( ! is_life_expectancy_valid( $_POST['life_expectancy'] ) ) {
+    			$_SESSION['errors']['life_expectancy'] = create_error( 'Invalid!' );
+    			$_SESSION['alert'] = create_alert( 'Please enter a reasonable life expectancy value between 1 and 120.' );
+
+    			header( 'Location: index.php' );
+    			return;
+    		}
+    	}
+	}
+
+	if ( isset( $_POST['reset'] ) ) {
+
+		unset( $_SESSION['date_of_birth'] );
+		unset( $_SESSION['life_expectancy'] );
+
+		header('Location: index.php');
+		return;
+	}
+}
+
+
+if ( 'GET' === $_SERVER['REQUEST_METHOD'] ) {
+
+	$input['date_of_birth'] = isset( $_SESSION['date_of_birth'] ) ? $_SESSION['date_of_birth'] : '';
+	$input['life_expectancy'] = isset( $_SESSION['life_expectancy'] ) ? $_SESSION['life_expectancy'] : '';
+
+	include './index.view.php';
+
 	return;
 }
 
-if ( isset( $_POST['submit'] ) ) {
 
-	if ( '' !== $_POST['birth_date'] ) {
+function get_result( $date_of_birth, $life_expectancy ) {
 
-		$_SESSION['birth_date'] = $_POST['birth_date'];
+	$months_old = get_months_since( $date_of_birth );
+
+	define ( 'MAX_MONTHS_IN_A_YEAR', 12 );
+
+	$tbody = '<tbody>';
+
+	for ( $i = 0; $i < $life_expectancy; $i++ ) {
+
+		$tbody .= "<tr><td class='age'>$i</td>";
+
+		for ( $j = 0; $j < MAX_MONTHS_IN_A_YEAR; $j++ ) {
+
+			if ( $months_old > 0 ) {
+
+				$tbody .= '<td class="lived">X</td>';
+
+				$months_old--;
+
+			} else {
+
+				$tbody .= '<td></td>';
+
+			}
+		}
+
+		$tbody .= '</tr>';
+	}
+	
+	$tbody .= '</tbody>';
+
+	$months = array(
+		'Jan',
+		'Feb',
+		'Mar',
+		'Apr',
+		'May',
+		'Jun',
+		'Jul',
+		'Aug',
+		'Sep',
+		'Oct',
+		'Nov',
+		'Dec'
+	);
+	
+	$birth_month = intval( date( 'm', strtotime( $date_of_birth ) ) );
+
+	$ths = '';
+	
+	for ( $i = 0, $j = $birth_month - 1; $i < 12; $i++, $j++ ) {
+
+		$month = $months[ $j % 12 ];
+
+		$ths .= "<th>$month</th>";
+
 	}
 
-	if ( $_POST['age'] > 0 ) {
+	$result = <<<HTML
+		<h4>Your Result:</h4>
+		<section id="result">
+			<table>
+				<thead>
+					<tr>
+						<th class="age">Age</th>
+						$ths
+					</tr>
+				</thead>
 
-		$_SESSION['age'] = $_POST['age'];
-	}
-
-	header('Location: index.php');
-	return;
-}
-
-?>
-
-<!DOCTYPE html>
-<html>
-<head>
-	<meta charset="utf-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1">
-	<title>Watch Me Die</title>
-	<style>
-		.error {
-			color: red;
-		}
-		.alert {
-			padding: 0.5rem;
-			border: 1px solid red;
-			background-color: indianred;
-			color: white;
-			max-width: 300px;
-		}
-		.box {
-			height: 15px;
-			width: 15px;
-			background-color: red;
-		}
-		.box.unlived {
-			background-color: green;
-		}
-		.row {
-			display: flex;
-			flex-wrap: nowrap;
-			margin-top: 0.5rem;
-		}
-		.row > * {
-			margin-left: 0.2rem;
-		}
-	</style>
-</head>
-<body>
-	<header>
-		<h1>Watch Me Die</h1>
-	</header>
-	<main>
-		<section id="input">
-			<form method="post">
-				<label for="birth_date">
-					When's your birthday?:
-				</label>
-				<input type="date" name="birth_date">
-				<br>
-
-				<label for="age">
-					How many years do you expect to live?:
-				</label>
-				<input type="number" name="age">
-
-				<input type="submit" name="submit" value="Submit">
-			</form>
-
-			<form method="post">
-				<input type="submit" name="reset" value="Reset">
-			</form>
+				$tbody
+			</table>
 		</section>
+	HTML;
 
-		<section id="output">
-			<?php
+	$letter_copy = <<<HTML
+		<p>You might be wondering...</p>
 
-				if (   ! isset ( $_SESSION['birth_date'] ) 
-					|| ! isset ( $_SESSION['age'] ) ) {
+		<p><b>What the heck does this table mean?</b></p>
 
-					if ( ! isset ( $_SESSION['birth_date'] ) ) {
-						echo '<p class="error">Warning: Birthday is empty.</p>';
-					}
+		<p>You see...</p>
 
-					if ( ! isset ( $_SESSION['age'] ) ) {
-						echo '<p class="error">Warning: Years expected to live is empty.</p>';
-					}
+		<p>The <b>X-marked black cells</b> represent the months of your life which you have already lived, a.k.a <b>Months Already Lived</b>.</p> 
+		
+		<p>Whereas the <b>white cells</b> represent the total opposite, a.k.a <b>Months Not Lived Yet</b>.</p>
 
-					echo '<p class="alert">Please fill in all required fields.</p>';
-					return;
-				}
+		<p>Unfortunately, you can't change the past.</p>
 
-				$months_old = get_months_since( $_SESSION['birth_date'] );
-				$temp       = $months_old;
-				for ( $i = 1; $i <= $_SESSION['age']; $i++ ) {
+		<p>So... if you feel like you have wasted a lot of time, it's ok.</p>
 
-					$year = $i < 10 ? "0{$i}" : "{$i}";
+		<p>However, the good news is...</p>
 
-					echo '<div class="row">' . $year;
+		<p><b>You still have some time available to fix some of the mistakes you have made in the past, or achieve some goals you've always dreamed of.</b></p>
 
-					for ( $j = 1; $j <= 12; $j++ ) {
+		<p>And...</p>
 
-						if ( $months_old > 0 ) {
+		<p>To help you get things moving in the right direction, I can give you <b>a little known secret to achieve any goal you want</b>.</p>
 
-							echo '<div class="box"></div>';
+		<p>It's not gonna be easy...</p>
 
-							$months_old--;
+		<p>But if you give it a hard try, you will be shocked by the result of this simple, but powerful exercise.</p>
 
-						} else {
+		<p><b>Here it is:</b></p>
 
-							echo '<div class="box unlived"></div>';
+		<p>Take a good look at the white cells from the table above.</p>
 
-						}
-					}
+		<p>Now, make commitment to use every pixel of each white cell to the fullest, every single day.</p>
 
-					echo '</div>';
-				}
+		<p>If you don't know how you're gonna do that yet, that's perfectly fine, it's how it's supposed to be, so don't worry.</p>
 
-			?>
+		<p><b>Creativity Follows Commitment!</b></p>
+
+		<p>After you have made the commitment, you will ask yourself one simple question every day, first thing in the morning:</p>
+
+		<p><b>- What is ONE thing that if I do today, I will move closer towards my goal?</b></p>
+
+		<p>Take 5 minutes to really think about the answer to this simple but powerful question.</p>
+
+		<p>Once you've come up with the answer, it's time to get to work.</p>
+
+		<p>Make sure you do that ONE thing by the end of the day.</p>
+
+		<p><b>If you do this exercise every single day, you will move closer, and closer towards your goal, every day.</b></p>
+
+		<p>And before you know it, that one thing that you've always dreamed of... has now become a reality.</p>
+
+		<p>Just stop procrastinating, and get to work!</p>
+
+		<p>And remember: </p>
+
+		<p><b>Fast Imperfect Action > Slow Perfect Action</b></p> 
+	HTML;
+
+	$letter = <<<HTML
+		<section id="letter">
+
+			$letter_copy
+
+			<div class="signature">
+
+				<p>All the best,</p>
+				
+				<p>Daniel-Sebastian Buhaianu</p>
+				
+				<p>Software Engineer</p>
+			</div>
+
 		</section>
-	</main>
-</body>
-</html>
+	HTML;
 
-<?php  
+	$html = $result . $letter;
+		
 
-// $date format: "YYYY-MM-DD"
-function get_seconds_since( $date ) {
-
-	$current_time = time();
-	$given_time   = strtotime("$date 00:00:00");
-
-	$time_diff    = $current_time - $given_time;
-
-	return $time_diff;
+	return $html;
 }
-
-// $date format: "YYYY-MM-DD"
-function get_days_since( $date ) {
-
-	$seconds = get_seconds_since( $date );
-	$days  = $seconds / 60 / 60 / 24;
-
-	return $days;
-}
-
-function get_months_since ( $date ) {
-
-	$months = 0;
-
-	$birth_year  = intval( date( 'Y', strtotime( $date ) ) );
-	$birth_month = intval( date( 'm', strtotime( $date ) ) );
-	$birth_day   = intval( date( 'd', strtotime( $date ) ) );
-
-	$current_year  = intval( date( 'Y', strtotime( 'now' ) ) );
-	$current_month = intval( date( 'm', strtotime( 'now' ) ) );
-	$current_day   = intval( date( 'd', strtotime( 'now' ) ) );
-
-	$year = $birth_year + 1;
-	while ( $year < $current_year ) {
-
-		$months += 12;
-
-		$year++;
-	}
-
-	if ( $current_month > $birth_month ) {
-
-		$months += 12 + ( $current_month - $birth_month - 1 );
-
-		if ( $current_day >= $birth_day ) {
-
-			$months++;
-		}
-
-		return $months;
-	}
-
-	if ( $current_month < $birth_month ) {
-
-		$months += 12 - ( $birth_month - $current_month  + 1 );
-
-		if ( $current_day >= $birth_day ) {
-
-			$months++;
-		}
-
-		return $months;
-	}
-
-	if ( $current_day >= $birth_day ) {
-
-		$months += 12;
-
-	} else {
-
-		$months += 11;
-
-	}
-
-	return $months;
-}
-
-function is_leap_year( $year ) {
-
-    if (($year % 4 == 0 && $year % 100 != 0) || $year % 400 == 0) {
-        return true;
-    }
-    
-    return false;
-}
-
-function debug_print( $description, $data ) {
-
-	echo '<p>' . $description . ': ' . $data . '</p>';
-}
-
-?>

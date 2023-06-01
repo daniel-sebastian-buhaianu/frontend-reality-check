@@ -1,0 +1,108 @@
+header > p {
+	font-size: 1.2rem;
+	font-weight: bold;
+	text-align: center;
+}
+
+label {
+	font-size: 0.9em;
+}
+
+section#result {
+	overflow: auto;
+}
+
+@media (min-width: 768px) {
+	section#result {
+		max-width: 526px;
+	}
+}
+
+section#letter {
+	padding: 0.5rem;
+}
+
+table {
+	font-size: 0.6rem;
+	border-collapse: collapse;
+	text-align: center;
+}
+
+@media (min-width: 768px) {
+	table {
+		font-size: 0.9rem;
+	}
+}
+
+table, th, td {
+	border: 1px solid black;
+}
+
+thead th {
+	padding: 5px;
+}
+
+th.age, td.age {
+	background-color: #000000de;
+	color: white;
+}
+
+td.lived {
+	background-color: #000000de;
+}
+
+main > * {
+	max-width: 400px;
+	margin-left: auto;
+	margin-right: auto;
+}
+
+footer {
+	text-align: center;
+}
+
+.form {
+	display: flex;
+	flex-direction: column;
+}
+
+.form-item {
+	display: flex;
+	flex-direction: column;
+	margin-top: 1rem;
+}
+
+.form-item > input {
+	margin-top: 0.1rem;
+	padding: 0.5rem;
+}
+
+.form-item.submit {
+	margin-top: 0.5rem;
+}
+
+.form-item.submit > input {
+	background-color: black;
+	border: none;
+	color: white;
+	border-radius: 0.25rem;
+	font-size: 0.9rem;
+	font-weight: bold;
+	cursor: pointer;
+}
+
+.error {
+	margin-top: 0.5rem;
+	color: red;
+	font-size: 0.9rem;
+}
+
+.alert {
+	padding: 0.5rem;
+	background-color: indianred;
+	color: white;
+}
+
+.signature > p {
+	margin: 0;
+}
