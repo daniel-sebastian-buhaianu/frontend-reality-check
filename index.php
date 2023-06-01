@@ -76,10 +76,11 @@ if ( 'POST' === $_SERVER['REQUEST_METHOD'] ) {
     	}
 	}
 
-	if ( isset( $_POST['reset'] ) ) {
+	if ( isset( $_POST['clear_result'] ) ) {
 
 		unset( $_SESSION['date_of_birth'] );
 		unset( $_SESSION['life_expectancy'] );
+		unset( $_SESSION['result'] );
 
 		header('Location: index.php');
 		return;
@@ -89,8 +90,8 @@ if ( 'POST' === $_SERVER['REQUEST_METHOD'] ) {
 
 if ( 'GET' === $_SERVER['REQUEST_METHOD'] ) {
 
-	$input['date_of_birth'] = isset( $_SESSION['date_of_birth'] ) ? $_SESSION['date_of_birth'] : '';
-	$input['life_expectancy'] = isset( $_SESSION['life_expectancy'] ) ? $_SESSION['life_expectancy'] : '';
+	$input['date_of_birth'] = isset( $_SESSION['date_of_birth'] ) ? htmlentities( $_SESSION['date_of_birth'] ): '';
+	$input['life_expectancy'] = isset( $_SESSION['life_expectancy'] ) ? htmlentities( $_SESSION['life_expectancy'] ) : '';
 
 	include './index.view.php';
 

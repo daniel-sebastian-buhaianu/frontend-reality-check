@@ -11,9 +11,7 @@
 		<p>Reality Check App</p>
 	</header>
 	<main>
-		<section id="input">
-
-			
+		<section id="input">		
 			<form method="post">
 				<?php
 					if ( isset( $_SESSION['alert'] ) ) {
@@ -54,6 +52,15 @@
 				<div class="form-item submit">
 					<input type="submit" name="submit" value="Get Reality Check">
 				</div>
+				<?php
+					if ( isset( $_SESSION['result'] ) ) {
+						echo <<<HTML
+							<div class="form-item clear">
+								<input type="submit" name="clear_result" value="Clear Result">
+							</div>
+						HTML;
+					}
+				?>
 			</form>
 		</section>
 

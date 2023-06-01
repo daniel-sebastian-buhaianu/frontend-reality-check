@@ -77,18 +77,23 @@ footer {
 	padding: 0.5rem;
 }
 
-.form-item.submit {
+.form-item.submit, 
+.form-item.clear {
 	margin-top: 0.5rem;
 }
 
-.form-item.submit > input {
-	background-color: black;
+.form-item.submit > input,
+.form-item.clear > input {
 	border: none;
-	color: white;
 	border-radius: 0.25rem;
 	font-size: 0.9rem;
 	font-weight: bold;
 	cursor: pointer;
+}
+
+.form-item.submit > input {
+	background-color: black;
+	color: white;
 }
 
 .error {
