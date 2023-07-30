@@ -72,7 +72,7 @@
 		?>
 
 		<footer>
-			<p>&copy; dsb99.dev</p>
+			<p>&copy; Daniel-Sebastian Buhaianu</p>
 		</footer>
 	</main>
 </body>
